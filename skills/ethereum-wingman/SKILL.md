@@ -15,6 +15,18 @@ Comprehensive Ethereum development guide for AI agents. Covers smart contract de
 
 ## AI AGENT INSTRUCTIONS - READ THIS FIRST
 
+### 🚨 BEFORE ANY TOKEN/APPROVAL/SECURITY CODE CHANGE
+**STOP. Re-read the "Critical Gotchas" section below before writing or modifying ANY code that touches:**
+- Token approvals (`approve`, `allowance`, `transferFrom`)
+- Token transfers (`transfer`, `safeTransfer`, `safeTransferFrom`)
+- Access control or permissions
+- Price calculations or oracle usage
+- Vault deposits/withdrawals
+
+**This is not optional.** The gotchas section exists because these are the exact mistakes that lose real money. Every time you think "I'll just quickly fix this" is exactly when you need to re-read it.
+
+---
+
 ### Default Stack: Scaffold-ETH 2 with Fork Mode
 
 When a user wants to BUILD any Ethereum project, follow these steps:
@@ -44,6 +56,14 @@ cd <project-name>
 yarn install
 yarn fork --network base  # or mainnet, arbitrum, optimism, polygon
 ```
+
+**⚠️ IMPORTANT: When using fork mode, the frontend target network MUST be `chains.foundry` (chain ID 31337), NOT the chain you're forking!**
+
+The fork runs locally on Anvil with chain ID 31337. Even if you're forking Base, Arbitrum, etc., the scaffold config must use:
+```typescript
+targetNetworks: [chains.foundry],  // NOT chains.base!
+```
+Only switch to `chains.base` (or other chain) when deploying to the REAL network.
 
 **Step 4: Enable Auto Block Mining (REQUIRED!)**
 
@@ -80,6 +100,12 @@ After the frontend is running, open a browser and test the app:
 
 Use the `cursor-browser-extension` MCP tools for browser automation.
 See `tools/testing/frontend-testing.md` for detailed workflows.
+
+### When Publishing a Scaffold-ETH 2 Project:
+
+1. **Update README.md** — Replace the default SE2 readme with your project's description
+2. **Update the footer link** — In `packages/nextjs/components/Footer.tsx`, change the "Fork me" link from `https://github.com/scaffold-eth/se-2` to your actual repo URL
+3. **Update page title** — In `packages/nextjs/app/layout.tsx`, change the metadata title/description
 
 ### DO NOT:
 
@@ -341,6 +367,7 @@ Before deployment, verify:
 - [ ] Input validation present
 - [ ] Events emitted for state changes
 - [ ] Incentives designed for maintenance functions
+- [ ] NO infinite approvals (use exact amounts, NEVER type(uint256).max)
 
 ---
 
