@@ -1,0 +1,40 @@
+{
+  "name": "composable-revenue",
+  "version": "1.0.0",
+  "description": "ComposAIble revenue management for Clanker tokens on Base via PoolFans",
+  "author": "ComposAIble Revenue",
+  "license": "MIT",
+  "homepage": "https://pool.fans",
+  "repository": "https://github.com/ComposAIbleRevenue/composable-revenue",
+  "keywords": [
+    "clanker",
+    "poolfans",
+    "fee-tokenization",
+    "time-wrappers",
+    "defi",
+    "base",
+    "revenue",
+    "composable"
+  ],
+  "chains": ["base"],
+  "contracts": {
+    "multiActionVaultFactory": "0x069aEC7cE08CDc0F45135bAac0E5Fe3B579AB99b",
+    "lpAutomationVaultFactory": "0xF0a87A32C2F7fAb1E372F676A852C64b8dB0CEDD",
+    "timeWrapperFactory": "0x083EDF9b6C894561Ce8a237e2fd570bECB920DfF",
+    "v4TokenizerFactory": "0xea8127533F7be6d04b3DBA8f0a496F2DCfd27728",
+    "v3_1_0TokenizerFactory": "0x50e2A7193c4AD03221F4B4e3e33cDF1a46671Ced",
+    "revenueShareRegistry": "0xAa9c3E28e2f03e41365D4b01FB2785bdbd1494d2"
+  },
+  "triggers": [
+    "tokenize fees",
+    "fee wrapper",
+    "time wrapper",
+    "burn strategy",
+    "LP strategy", 
+    "holder rewards",
+    "trader rewards",
+    "clanker",
+    "poolfans",
+    "composable revenue"
+  ]
+}
