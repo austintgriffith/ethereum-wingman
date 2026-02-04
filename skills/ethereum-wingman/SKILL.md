@@ -583,7 +583,7 @@ Steps marked 🤖 are fully automatic. Steps marked 👤 need human input.
 - Check for common issues: duplicate h1, missing AddressInput, raw text inputs
 
 **Step 2: 👤 Ask the boss what domain they want**
-Ask: *"What subdomain do you want for this? e.g. `token.clawdbotatg.eth` → `token.clawdbotatg.eth.limo`"*
+Ask: *"What subdomain do you want for this? e.g. `token.clawdbotatg.eth` → `token.clawdbotatg.eth.link`"*
 Save the answer — it determines the production URL for metadata + ENS setup.
 
 **Step 3: 🤖 Generate OG image + fix metadata for unfurls**
@@ -597,7 +597,7 @@ Social unfurls (Twitter, Telegram, Discord, etc.) need THREE things correct:
 ```python
 # Use PIL/Pillow to create a branded 1200x630 OG image with:
 # - App name and tagline
-# - Production URL (name.clawdbotatg.eth.limo)
+# - Production URL (name.clawdbotatg.eth.link)
 # - Dark background, clean layout, accent colors
 # Save to: packages/nextjs/public/thumbnail.png
 ```
@@ -617,7 +617,7 @@ If this env var pattern is already in the file, skip this step.
 cd packages/nextjs
 rm -rf .next out
 
-NEXT_PUBLIC_PRODUCTION_URL="https://<name>.clawdbotatg.eth.limo" \
+NEXT_PUBLIC_PRODUCTION_URL="https://<name>.clawdbotatg.eth.link" \
   NODE_OPTIONS="--require ./polyfill-localstorage.cjs" \
   NEXT_PUBLIC_IPFS_BUILD=true NEXT_PUBLIC_IGNORE_BUILD_ERROR=true \
   yarn build
@@ -664,15 +664,15 @@ cast call $RESOLVER "contenthash(bytes32)(bytes)" \
   $(cast namehash <name>.clawdbotatg.eth) --rpc-url <RPC>
 
 # 2. .limo gateway responds (may take a few minutes for cache)
-curl -s -o /dev/null -w "%{http_code}" -L "https://<name>.clawdbotatg.eth.limo"
+curl -s -o /dev/null -w "%{http_code}" -L "https://<name>.clawdbotatg.eth.link"
 
 # 3. OG metadata correct
-curl -s -L "https://<name>.clawdbotatg.eth.limo" | grep 'og:image'
+curl -s -L "https://<name>.clawdbotatg.eth.link" | grep 'og:image'
 # Should show the production URL, NOT localhost
 ```
 
 **Step 8: 👤 Report to the boss**
-Send: *"Live at `https://<name>.clawdbotatg.eth.limo` — unfurl metadata set, ENS content hash confirmed on-chain."*
+Send: *"Live at `https://<name>.clawdbotatg.eth.link` — unfurl metadata set, ENS content hash confirmed on-chain."*
 
 ---
 
