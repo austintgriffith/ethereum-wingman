@@ -50,7 +50,7 @@ await writeContractAsync({...}); // Waits for actual on-chain confirmation
 ## 🚨 FRONTEND UX RULES (MANDATORY)
 
 **These are HARD RULES, not suggestions. A build is NOT done until all of these are satisfied.**
-**Austin has had to repeat these many times. That stops now.**
+**These rules have been learned the hard way. Do not skip them.**
 
 ### Rule 1: Every Onchain Button — Loader + Disable
 
@@ -163,7 +163,7 @@ import { AddressInput } from "~~/components/scaffold-eth";
 
 ```typescript
 // ✅ CORRECT — Display with USD
-<span>1,000 CLAWD (~$4.20)</span>
+<span>1,000 TOKEN (~$4.20)</span>
 <span>0.5 ETH (~$1,250.00)</span>
 
 // ✅ CORRECT — Input with live USD preview
@@ -173,12 +173,12 @@ import { AddressInput } from "~~/components/scaffold-eth";
 </span>
 
 // ❌ WRONG — Amount with no USD context
-<span>1,000 CLAWD</span>  // User has no idea what this is worth
+<span>1,000 TOKEN</span>  // User has no idea what this is worth
 ```
 
 **Where to get prices:**
 - **ETH price:** SE2 has a built-in hook — `useNativeCurrencyPrice()` or check the price display component in the bottom-left footer. It reads from mainnet Uniswap V2 WETH/DAI pool.
-- **Custom tokens ($CLAWD, etc.):** Use DexScreener API (`https://api.dexscreener.com/latest/dex/tokens/TOKEN_ADDRESS`), on-chain Uniswap quoter, or Chainlink oracle if available.
+- **Custom tokens:** Use DexScreener API (`https://api.dexscreener.com/latest/dex/tokens/TOKEN_ADDRESS`), on-chain Uniswap quoter, or Chainlink oracle if available.
 
 **This applies to both display AND input:**
 - Displaying a balance? Show USD next to it.
@@ -191,10 +191,10 @@ import { AddressInput } from "~~/components/scaffold-eth";
 
 ```typescript
 // ❌ WRONG — AI agents ALWAYS do this
-<Header />  {/* Already shows "🦞 $CLAWD Token Hub" */}
+<Header />  {/* Already shows "🦞 $TOKEN Hub" */}
 <main>
-  <h1>🦞 $CLAWD Token Hub</h1>  {/* DUPLICATE! Delete this. */}
-  <p>Buy, send, and track CLAWD on Base</p>
+  <h1>🦞 $TOKEN Hub</h1>  {/* DUPLICATE! Delete this. */}
+  <p>Buy, send, and track TOKEN on Base</p>
   ...
 </main>
 
@@ -317,7 +317,7 @@ After deploying to Base (or fork), open the app and do a FULL walkthrough:
 9. **Address displays** — are all addresses showing ENS/blockies, not raw hex?
 10. **Share the URL** — check that the OG unfurl looks correct (image, title, description)
 
-**Only after ALL of this passes can you tell Austin "it's done."**
+**Only after ALL of this passes can you tell the user "it's done."**
 
 ### Phase 4: QA Sub-Agent Review (For Complex Builds)
 For bigger projects, spawn a sub-agent with a fresh context:
@@ -592,7 +592,7 @@ if (isIpfs) {
 
 ### 🚀 GO TO PRODUCTION — Full Checklist
 
-When the boss says "ship it", follow this EXACT sequence.
+When the user says "ship it", follow this EXACT sequence.
 Steps marked 🤖 are fully automatic. Steps marked 👤 need human input.
 
 ---
@@ -602,7 +602,7 @@ Steps marked 🤖 are fully automatic. Steps marked 👤 need human input.
 - Test locally (`yarn start`) one last time
 - Check for common issues: duplicate h1, missing AddressInput, raw text inputs
 
-**Step 2: 👤 Ask the boss what domain they want**
+**Step 2: 👤 Ask the user what domain they want**
 Ask: *"What subdomain do you want for this? e.g. `token.yourname.eth` → `token.yourname.eth.limo`"*
 Save the answer — it determines the production URL for metadata + ENS setup.
 
@@ -654,7 +654,7 @@ yarn bgipfs upload out
 
 **Step 5: 👤 Share IPFS URL for verification**
 Send: *"Here's the build for review: `https://community.bgipfs.com/ipfs/<CID>`"*
-**Wait for approval before touching ENS.** Don't proceed until the boss says go.
+**Wait for approval before touching ENS.** Don't proceed until the user says go.
 
 **Step 6: 🤖 Set up ENS subdomain (2 mainnet transactions)**
 
@@ -691,7 +691,7 @@ curl -s -L "https://<name>.yourname.eth.limo" | grep 'og:image'
 # Should show the production URL, NOT localhost
 ```
 
-**Step 8: 👤 Report to the boss**
+**Step 8: 👤 Report to the user**
 Send: *"Live at `https://<name>.yourname.eth.limo` — unfurl metadata set, ENS content hash confirmed on-chain."*
 
 ---
