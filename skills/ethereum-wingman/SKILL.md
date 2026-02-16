@@ -316,6 +316,8 @@ After deploying to Base (or fork), open the app and do a FULL walkthrough:
 8. **Error handling** — reject a transaction in wallet, verify the UI recovers gracefully
 9. **Address displays** — are all addresses showing ENS/blockies, not raw hex?
 10. **Share the URL** — check that the OG unfurl looks correct (image, title, description)
+11. **Mobile wallet deep linking** — if the app has any mobile deep link logic (`openWallet()` or similar), verify it detects the connected wallet via `connector.id`/`connector.name` and deep links to the correct app (Rainbow, Phantom, Coinbase, etc.) — NOT hardcoded to MetaMask. See `tools/testing/frontend-qa-checklist.md` for the full pattern.
+12. **Phantom wallet** — verify `wagmiConnectors.tsx` includes `phantomWallet` from `@rainbow-me/rainbowkit/wallets`
 
 **Only after ALL of this passes can you tell the user "it's done."**
 

@@ -116,6 +116,61 @@ All items must pass before moving to Phase 2:
     → Verify final state is correct on-chain
 ```
 
+### Mobile Wallet Deep Linking
+
+On mobile, when a user connects via Rainbow, Phantom, Coinbase Wallet, or any non-MetaMask wallet, clicking a transaction button must open **their connected wallet** — not MetaMask. SE2's default `wagmiConnectors.tsx` includes `phantomWallet` but the app has no mobile deep linking out of the box.
+
+**If your app calls `openWallet()` or does any manual deep linking on mobile, it MUST detect the connected wallet:**
+
+```typescript
+import { useAccount } from "wagmi";
+
+const { connector } = useAccount();
+
+const openWallet = useCallback(() => {
+  if (typeof window === "undefined") return;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (!isMobile) return;
+  // Already inside a wallet's in-app browser
+  if (window.innerWidth < 500 && window.ethereum) return;
+
+  const currentUrl = window.location.href;
+  const strippedUrl = currentUrl.replace(/^https?:\/\//, "");
+  const id = (connector?.id || "").toLowerCase();
+  const name = (connector?.name || "").toLowerCase();
+
+  if (name.includes("rainbow") || id.includes("rainbow")) {
+    window.location.href = `rainbow://dapp/${strippedUrl}`;
+  } else if (name.includes("phantom") || id.includes("phantom")) {
+    window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}?ref=${encodeURIComponent(currentUrl)}`;
+  } else if (name.includes("coinbase") || id.includes("coinbase")) {
+    window.location.href = `cbwallet://dapp/${strippedUrl}`;
+  } else if (name.includes("trust") || id.includes("trust")) {
+    window.location.href = `trust://open_url?coin_id=60&url=${encodeURIComponent(currentUrl)}`;
+  } else if (name.includes("metamask") || id.includes("metamask")) {
+    window.location.href = `metamask://dapp/${strippedUrl}`;
+  }
+  // WalletConnect and others — SDK handles the redirect
+}, [connector]);
+```
+
+**Common mistake:** Hardcoding `metamask://dapp/...` for all wallets. This hijacks users into MetaMask even when they connected with Rainbow or Phantom.
+
+**Verify `wagmiConnectors.tsx` includes Phantom:**
+```typescript
+import { phantomWallet } from "@rainbow-me/rainbowkit/wallets";
+// ... include phantomWallet in the wallets array
+```
+
+### Mobile Wallet Test Protocol
+```
+1. Open production URL on phone
+2. Connect via Rainbow (or Phantom, Coinbase Wallet)
+3. Click any transaction button (approve, action, etc.)
+4. Verify it opens THE SAME WALLET you connected with
+5. ❌ If it opens MetaMask instead → deep linking is broken
+```
+
 ### Exit Gate
 All items must pass before moving to Phase 3:
 - [ ] Wallet connects cleanly
@@ -130,6 +185,8 @@ All items must pass before moving to Phase 3:
 - [ ] All addresses use `<Address/>`
 - [ ] Real transaction end-to-end works
 - [ ] No console errors
+- [ ] Mobile: transaction buttons open the connected wallet (not hardcoded MetaMask)
+- [ ] `wagmiConnectors.tsx` includes `phantomWallet`
 
 ---
 
