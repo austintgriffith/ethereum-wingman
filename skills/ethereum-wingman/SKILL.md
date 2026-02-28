@@ -704,6 +704,181 @@ Send: *"Live at `https://<name>.yourname.eth.limo` — unfurl metadata set, ENS 
 
 ### DO NOT:
 
+### Deploying SE2 to Swarm (Decentralized Storage)
+
+**Swarm is an alternative to IPFS for decentralized hosting.** Like IPFS, it's permanent and censorship-resistant, but uses a different economic model (postage stamps for storage incentivization).
+
+**Prerequisites:**
+- Running Swarm node (local or remote)
+- BZZ tokens for postage stamps
+- `swarm-cli` installed (`npm install -g @ethersphere/swarm-cli`)
+
+**Step 1: Build for Static Export**
+
+Same as IPFS — Next.js must generate static HTML:
+
+```bash
+cd packages/nextjs
+rm -rf .next out
+
+# Build with static export + production URL
+NEXT_PUBLIC_PRODUCTION_URL="https://<name>.yourname.eth.limo" \
+  NODE_OPTIONS="--require ./polyfill-localstorage.cjs" \
+  NEXT_PUBLIC_IPFS_BUILD=true NEXT_PUBLIC_IGNORE_BUILD_ERROR=true \
+  yarn build
+```
+
+**⚠️ Important:** The `NEXT_PUBLIC_IPFS_BUILD` flag works for Swarm too — it's just enabling static export mode, not IPFS-specific.
+
+**Step 2: Create a Postage Stamp**
+
+Swarm requires postage stamps to store data. Create one (or reuse existing):
+
+```bash
+# Check existing stamps
+swarm-cli stamp list
+
+# Create new stamp (lasts ~24 hours with 0.1 BZZ)
+swarm-cli stamp buy --amount 100000000 --depth 20
+
+# Save the stamp ID (looks like: 0a1b2c3d4e5f...)
+```
+
+**Stamp parameters:**
+- `--amount`: BZZ amount in PLUR (1 BZZ = 10^16 PLUR)
+- `--depth`: Storage depth (20 = ~4MB, 24 = ~64MB, increase for larger apps)
+
+**Step 3: Upload to Swarm**
+
+```bash
+# Upload the build output
+swarm-cli upload out/ --stamp <STAMP_ID>
+
+# Returns Swarm reference (hash), e.g.:
+# Swarm hash: a1b2c3d4e5f6...
+```
+
+**Step 4: Verify Upload**
+
+```bash
+# Test via Swarm gateway
+curl -s -o /dev/null -w "%{http_code}" "https://api.gateway.ethswarm.org/bzz/<SWARM_HASH>/"
+# Should return 200
+
+# Or visit in browser:
+open "https://api.gateway.ethswarm.org/bzz/<SWARM_HASH>/"
+```
+
+**Step 5: Set ENS Content Hash to Swarm**
+
+Update your ENS subdomain to point to Swarm instead of IPFS:
+
+1. Go to `https://app.ens.domains/<name>.yourname.eth`
+2. Navigate to "Records" tab → "Edit Records" → "Other"
+3. In "Content Hash" field, enter: `bzz://<SWARM_HASH>`
+4. Save → Confirm transaction
+
+**After confirmation, your app will be accessible at:**
+- Swarm gateway: `https://api.gateway.ethswarm.org/bzz/<SWARM_HASH>/`
+- ENS: `https://<name>.yourname.eth.limo` (resolves to Swarm via ENS content hash)
+
+### Swarm vs IPFS: When to Use Each
+
+| Feature | IPFS | Swarm |
+|---------|------|-------|
+| **Persistence** | Pinning services (paid) | Postage stamps (prepaid storage time) |
+| **Economic model** | Pin-to-earn (Filecoin) | Stamp-based incentivization |
+| **Gateway support** | Wide (.limo, Cloudflare, Pinata) | Official Swarm gateways |
+| **ENS support** | `ipfs://` content hash | `bzz://` content hash |
+| **Best for** | Widely accessed content | Ethereum-native dApps |
+
+**Use IPFS when:**
+- You want maximum gateway redundancy
+- Long-term persistence via Filecoin deals
+- Compatibility with existing infrastructure
+
+**Use Swarm when:**
+- Building Ethereum-native apps
+- You already run Swarm infrastructure
+- Prefer the postage stamp model over pinning services
+
+### Swarm Deployment Gotchas
+
+**1. Stamp Expiration**
+
+Postage stamps have a time-to-live. Monitor stamp expiration:
+
+```bash
+# Check stamp status
+swarm-cli stamp show <STAMP_ID>
+
+# Top up existing stamp (extends TTL)
+swarm-cli stamp topup <STAMP_ID> --amount 100000000
+```
+
+Set a reminder to top up before expiration, or your content becomes unreachable.
+
+**2. Routing Same as IPFS**
+
+Swarm gateways also need `trailingSlash: true` for route resolution. The same `next.config.ts` rules apply:
+
+```typescript
+if (isIpfs) {  // Works for Swarm too
+  nextConfig.output = "export";
+  nextConfig.trailingSlash = true;  // Required!
+  nextConfig.images = { unoptimized: true };
+}
+```
+
+**3. Gateway Availability**
+
+Official Swarm gateways:
+- `https://api.gateway.ethswarm.org` (main public gateway)
+- Run your own: `bee` node with `--gateway-mode` enabled
+
+**4. Updating Content**
+
+Unlike IPFS (where CID changes per upload), Swarm uses **feeds** for mutable references. For static SE2 deploys:
+- Each upload = new Swarm hash
+- Update ENS content hash to the new hash
+- Old versions remain accessible at their original hash
+
+For dynamic updates, use Swarm feeds (advanced topic, not covered here).
+
+### Full Swarm Deploy Script
+
+```bash
+#!/bin/bash
+set -e
+
+# Config
+PROJECT_DIR="packages/nextjs"
+STAMP_ID="<YOUR_STAMP_ID>"
+ENS_NAME="<name>.yourname.eth"
+PRODUCTION_URL="https://$ENS_NAME.limo"
+
+echo "Building for Swarm..."
+cd $PROJECT_DIR
+rm -rf .next out
+
+NEXT_PUBLIC_PRODUCTION_URL="$PRODUCTION_URL" \
+  NODE_OPTIONS="--require ./polyfill-localstorage.cjs" \
+  NEXT_PUBLIC_IPFS_BUILD=true NEXT_PUBLIC_IGNORE_BUILD_ERROR=true \
+  yarn build
+
+echo "Uploading to Swarm..."
+SWARM_HASH=$(swarm-cli upload out/ --stamp $STAMP_ID | grep "Swarm hash:" | awk '{print $3}')
+
+echo "✓ Deployed to Swarm: $SWARM_HASH"
+echo "Gateway: https://api.gateway.ethswarm.org/bzz/$SWARM_HASH/"
+echo ""
+echo "Update ENS content hash to: bzz://$SWARM_HASH"
+echo "Visit: https://app.ens.domains/$ENS_NAME"
+```
+
+Save as `deploy-swarm.sh`, make executable, and run after each code change.
+
+
 - Run `yarn chain` (use `yarn fork --network <chain>` instead!)
 - Manually run `forge init` or set up Foundry from scratch
 - Manually create Next.js projects  
